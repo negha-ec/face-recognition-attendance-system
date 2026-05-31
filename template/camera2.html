@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Taking Attendance — {{ subject }}</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #0f1117;
+            color: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 20px;
+        }
+
+        header {
+            width: 100%;
+            max-width: 700px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+        }
+
+        header h1 { font-size: 20px; font-weight: 700; }
+        header h1 span { color: #4f9eff; }
+
+        .stop-btn {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .stop-btn:hover { background: #dc2626; }
+
+        .status-card {
+            background: #1a1d2e;
+            border: 1px solid #2a2d3e;
+            border-radius: 16px;
+            padding: 40px;
+            width: 100%;
+            max-width: 700px;
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .camera-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+            animation: pulse-icon 2s infinite;
+        }
+
+        @keyframes pulse-icon {
+            0%, 100% { transform: scale(1); }
+            50%       { transform: scale(1.05); }
+        }
+
+        .status-card h2 { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+        .status-card p  { font-size: 14px; color: #6b7280; margin-bottom: 16px; }
+
+        .kbd {
+            display: inline-block;
+            background: #0f1117;
+            border: 1px solid #4f9eff;
+            color: #4f9eff;
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-size: 15px;
+            font-weight: 700;
+            font-family: monospace;
+        }
+
+        .marked-card {
+            background: #1a1d2e;
+            border: 1px solid #2a2d3e;
+            border-radius: 16px;
+            padding: 28px;
+            width: 100%;
+            max-width: 700px;
+        }
+
+        .marked-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .marked-header h2 {
+            font-size: 14px;
+            font-weight: 600;
+            color: #9ca3af;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .count-badge {
+            background: #4f9eff;
+            color: white;
+            font-size: 13px;
+            font-weight: 700;
+            padding: 3px 12px;
+            border-radius: 20px;
+        }
+
+        .student-grid { display: flex; flex-wrap: wrap; gap: 10px; }
+
+        .student-chip {
+            background: #0f1117;
+            border: 1px solid #22c55e;
+            color: #22c55e;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 500;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to   { opacity: 1; transform: scale(1); }
+        }
+
+        .empty-msg { font-size: 14px; color: #6b7280; text-align: center; padding: 20px 0; width: 100%; }
+
+        .pulse {
+            display: inline-block;
+            width: 10px; height: 10px;
+            background: #22c55e;
+            border-radius: 50%;
+            margin-right: 8px;
+            animation: pulse-dot 1.5s infinite;
+        }
+
+        @keyframes pulse-dot {
+            0%   { box-shadow: 0 0 0 0 rgba(34,197,94,0.5); }
+            70%  { box-shadow: 0 0 0 8px rgba(34,197,94,0); }
+            100% { box-shadow: 0 0 0 0 rgba(34,197,94,0); }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>📷 Taking Attendance — <span>{{ subject }}</span></h1>
+        <form action="/stop" method="POST">
+            <button class="stop-btn" type="submit">■ Stop & View Records</button>
+        </form>
+    </header>
+
+    <div class="status-card">
+        <div class="camera-icon">🎥</div>
+        <h2>Camera is Running</h2>
+        <p>A camera window has opened on your screen.<br>
+           Face each student towards the camera to mark attendance.</p>
+        <p>Press <span class="kbd">Q</span> in the camera window to stop,<br>
+           or click <strong>Stop & View Records</strong> above.</p>
+    </div>
+
+    <div class="marked-card">
+        <div class="marked-header">
+            <h2><span class="pulse"></span> Marked Students</h2>
+            <span class="count-badge" id="count">0</span>
+        </div>
+        <div class="student-grid" id="student-grid">
+            <p class="empty-msg" id="empty-msg">Waiting for faces...</p>
+        </div>
+    </div>
+
+    <script>
+        let previousCount = 0;
+        let redirected = false;
+
+        function fetchMarked() {
+            fetch("/marked_students")
+                .then(res => res.json())
+                .then(data => {
+                    const names   = data.marked;
+                    const running = data.running;
+
+                    // Auto-redirect when camera is stopped via Q key
+                    if (!running && !redirected) {
+                        redirected = true;
+                        window.location.href = "/attendance?subject={{ subject }}";
+                        return;
+                    }
+
+                    if (names.length === previousCount) return;
+                    previousCount = names.length;
+
+                    const grid  = document.getElementById("student-grid");
+                    const count = document.getElementById("count");
+                    const empty = document.getElementById("empty-msg");
+
+                    count.textContent = names.length;
+
+                    if (names.length > 0) {
+                        if (empty) empty.remove();
+                        grid.innerHTML = "";
+                        names.forEach(name => {
+                            const chip = document.createElement("div");
+                            chip.className = "student-chip";
+                            chip.textContent = "✓ " + name;
+                            grid.appendChild(chip);
+                        });
+                    }
+                });
+        }
+
+        setInterval(fetchMarked, 2000);
+        fetchMarked();
+    </script>
+
+</body>
+</html>
