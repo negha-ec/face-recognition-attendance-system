@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Reports</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #0f1117;
+            color: #ffffff;
+            min-height: 100vh;
+            padding: 30px 20px;
+        }
+        .container { max-width: 700px; margin: 0 auto; }
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 28px;
+        }
+        header h1 { font-size: 22px; font-weight: 700; }
+        .back-btn {
+            background: #1a1d2e;
+            color: #4f9eff;
+            border: 1px solid #2a2d3e;
+            padding: 9px 18px;
+            border-radius: 8px;
+            font-size: 14px;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .back-btn:hover { background: #2a2d3e; }
+        .subtitle {
+            color: #6b7280;
+            font-size: 14px;
+            margin-bottom: 24px;
+        }
+        .student-card {
+            background: #1a1d2e;
+            border: 1px solid #2a2d3e;
+            border-radius: 12px;
+            padding: 20px 24px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            text-decoration: none;
+            color: white;
+            transition: border-color 0.2s, background 0.2s;
+        }
+        .student-card:hover {
+            border-color: #4f9eff;
+            background: #1f2235;
+        }
+        .student-info { display: flex; align-items: center; gap: 16px; }
+        .roll-badge {
+            background: #1e3a5f;
+            color: #4f9eff;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 700;
+        }
+        .student-name { font-size: 16px; font-weight: 600; }
+        .student-id   { font-size: 12px; color: #6b7280; margin-top: 3px; }
+        .arrow { color: #4f9eff; font-size: 18px; }
+        .empty {
+            text-align: center;
+            padding: 60px;
+            color: #6b7280;
+            background: #1a1d2e;
+            border: 1px solid #2a2d3e;
+            border-radius: 12px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1>📊 Student Reports</h1>
+        <a href="/" class="back-btn">← Back to Home</a>
+    </header>
+    <p class="subtitle">Click on a student to view their attendance report.</p>
+
+    {% if students %}
+        {% for s in students %}
+        <a href="/student_report/{{ s.student_id }}" class="student-card">
+            <div class="student-info">
+                <span class="roll-badge">Roll {{ s.roll_no }}</span>
+                <div>
+                    <div class="student-name">{{ s.student_name }}</div>
+                    <div class="student-id">{{ s.student_id }}</div>
+                </div>
+            </div>
+            <span class="arrow">→</span>
+        </a>
+        {% endfor %}
+    {% else %}
+        <div class="empty">
+            <div style="font-size:48px">📭</div>
+            <p style="margin-top:12px">No students found in the system.</p>
+        </div>
+    {% endif %}
+</div>
+</body>
+</html>
