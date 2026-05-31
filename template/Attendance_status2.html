@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attendance Status</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #0f1117;
+            color: #ffffff;
+            min-height: 100vh;
+            padding: 30px 20px;
+        }
+
+        .container { max-width: 900px; margin: 0 auto; }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 28px;
+        }
+
+        header h1 { font-size: 22px; font-weight: 700; }
+
+        .back-btn {
+            background: #1a1d2e;
+            color: #4f9eff;
+            border: 1px solid #2a2d3e;
+            padding: 9px 18px;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .back-btn:hover { background: #2a2d3e; }
+
+        /* Filter bar */
+        .filter-bar {
+            background: #1a1d2e;
+            border: 1px solid #2a2d3e;
+            border-radius: 12px;
+            padding: 20px 24px;
+            display: flex;
+            gap: 16px;
+            align-items: flex-end;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .filter-group label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #9ca3af;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        select, input[type="date"] {
+            padding: 10px 14px;
+            background: #0f1117;
+            border: 1px solid #2a2d3e;
+            border-radius: 8px;
+            color: #ffffff;
+            font-size: 14px;
+            outline: none;
+            cursor: pointer;
+        }
+
+        select:focus, input[type="date"]:focus { border-color: #4f9eff; }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background 0.2s;
+        }
+
+        .btn-primary { background: #4f9eff; color: white; }
+        .btn-primary:hover { background: #3b8aee; }
+
+        /* Stats */
+        .stats {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: #1a1d2e;
+            border: 1px solid #2a2d3e;
+            border-radius: 10px;
+            padding: 16px 24px;
+            flex: 1;
+            text-align: center;
+        }
+
+        .stat-card .number { font-size: 28px; font-weight: 700; }
+        .stat-card .label  { font-size: 12px; color: #6b7280; margin-top: 4px; }
+        .number.blue   { color: #4f9eff; }
+        .number.green  { color: #22c55e; }
+        .number.red    { color: #ef4444; }
+
+        /* Filter tabs */
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .tab {
+            padding: 8px 20px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            border: 1px solid #2a2d3e;
+            color: #9ca3af;
+            background: #1a1d2e;
+            transition: all 0.2s;
+        }
+
+        .tab:hover { border-color: #4f9eff; color: #4f9eff; }
+        .tab.active-all     { background: #4f9eff; color: white; border-color: #4f9eff; }
+        .tab.active-present { background: #22c55e; color: white; border-color: #22c55e; }
+        .tab.active-absent  { background: #ef4444; color: white; border-color: #ef4444; }
+
+        /* Export row */
+        .top-actions {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 12px;
+        }
+
+        .btn-export {
+            padding: 9px 18px;
+            background: #22c55e;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background 0.2s;
+        }
+
+        .btn-export:hover { background: #16a34a; }
+
+        /* Table */
+        .table-wrap {
+            background: #1a1d2e;
+            border: 1px solid #2a2d3e;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        table { width: 100%; border-collapse: collapse; }
+
+        thead th {
+            background: #0f1117;
+            padding: 14px 16px;
+            text-align: left;
+            font-size: 12px;
+            font-weight: 600;
+            color: #9ca3af;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        tbody tr {
+            border-top: 1px solid #2a2d3e;
+            transition: background 0.15s;
+        }
+
+        tbody tr:hover { background: #1f2235; }
+
+        tbody td {
+            padding: 13px 16px;
+            font-size: 14px;
+            color: #e5e7eb;
+        }
+
+        .badge-present {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            background: #14532d;
+            color: #22c55e;
+        }
+
+        .badge-absent {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            background: #450a0a;
+            color: #ef4444;
+        }
+
+        .btn-mark {
+            background: transparent;
+            color: #22c55e;
+            border: 1px solid #22c55e;
+            padding: 5px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-mark:hover { background: #22c55e; color: white; }
+
+        .btn-remove {
+            background: transparent;
+            color: #ef4444;
+            border: 1px solid #ef4444;
+            padding: 5px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-remove:hover { background: #ef4444; color: white; }
+
+        .roll-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            background: #1e3a5f;
+            color: #4f9eff;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6b7280;
+        }
+
+        .prompt-msg {
+            background: #1a1d2e;
+            border: 1px solid #2a2d3e;
+            border-radius: 12px;
+            padding: 50px;
+            text-align: center;
+            color: #6b7280;
+            font-size: 15px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <header>
+        <h1>📋 Attendance Status</h1>
+        <a href="/" class="back-btn">← Back to Home</a>
+    </header>
+
+    <!-- Filter bar -->
+    <form method="GET" action="/attendance_status">
+        <div class="filter-bar">
+            <div class="filter-group">
+                <label>Subject</label>
+                <select name="subject" required>
+                    <option value="" disabled {% if not selected_subject %}selected{% endif %}>-- Select subject --</option>
+                    {% for subject in subjects %}
+                    <option value="{{ subject }}" {% if subject == selected_subject %}selected{% endif %}>
+                        {{ subject }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>Date</label>
+                <input type="date" name="date" value="{{ selected_date }}" max="{{ today }}">
+            </div>
+            <input type="hidden" name="filter" value="{{ filter_type }}">
+            <button type="submit" class="btn btn-primary">View</button>
+        </div>
+    </form>
+
+    {% if not selected_subject %}
+    <div class="prompt-msg">
+        📚 Select a subject and date above to view attendance status.
+    </div>
+
+    {% else %}
+
+    <!-- Stats -->
+    <div class="stats">
+        <div class="stat-card">
+            <div class="number blue">{{ records | length }}</div>
+            <div class="label">Total Students</div>
+        </div>
+        <div class="stat-card">
+            <div class="number green">{{ records | selectattr("status", "equalto", "Present") | list | length }}</div>
+            <div class="label">Present</div>
+        </div>
+        <div class="stat-card">
+            <div class="number red">{{ records | selectattr("status", "equalto", "Absent") | list | length }}</div>
+            <div class="label">Absent</div>
+        </div>
+    </div>
+
+    <!-- Filter tabs + Export -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <div class="tabs">
+            <a href="/attendance_status?subject={{ selected_subject }}&date={{ selected_date }}&filter=all"
+               class="tab {% if filter_type == 'all' %}active-all{% endif %}">All</a>
+            <a href="/attendance_status?subject={{ selected_subject }}&date={{ selected_date }}&filter=present"
+               class="tab {% if filter_type == 'present' %}active-present{% endif %}">Present</a>
+            <a href="/attendance_status?subject={{ selected_subject }}&date={{ selected_date }}&filter=absent"
+               class="tab {% if filter_type == 'absent' %}active-absent{% endif %}">Absent</a>
+        </div>
+        <a href="/export_status?subject={{ selected_subject }}&date={{ selected_date }}&filter={{ filter_type }}"
+           class="btn-export">⬇ Export Excel</a>
+    </div>
+
+    <!-- Table -->
+    <div class="table-wrap">
+        {% set filtered = records if filter_type == 'all'
+            else records | selectattr("status", "equalto", "Present") | list if filter_type == 'present'
+            else records | selectattr("status", "equalto", "Absent") | list %}
+
+        {% if filtered %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Roll No</th>
+                    <th>Student ID</th>
+                    <th>Name</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in filtered %}
+                <tr>
+                    <td><span class="roll-badge">{{ r.roll_no }}</span></td>
+                    <td>{{ r.student_id }}</td>
+                    <td>{{ r.student_name }}</td>
+                    <td>
+                        {% if r.status == "Present" %}
+                        <span class="badge-present">✓ Present</span>
+                        {% else %}
+                        <span class="badge-absent">✗ Absent</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if r.status == "Absent" %}
+                        <form method="POST" action="/mark_present"
+                              onsubmit="return confirm('Mark {{ r.student_name }} as present?')">
+                            <input type="hidden" name="student_id"   value="{{ r.student_id }}">
+                            <input type="hidden" name="student_name" value="{{ r.student_name }}">
+                            <input type="hidden" name="subject"      value="{{ selected_subject }}">
+                            <input type="hidden" name="date"         value="{{ selected_date }}">
+                            <input type="hidden" name="filter"       value="{{ filter_type }}">
+                            <input type="hidden" name="session_id"   value="{{ session_id }}">
+                            <button type="submit" class="btn-mark">✓ Mark Present</button>
+                        </form>
+                        {% else %}
+                        <form method="POST" action="/remove_present"
+                              onsubmit="return confirm('Remove {{ r.student_name }} attendance?')">
+                            <input type="hidden" name="student_id" value="{{ r.student_id }}">
+                            <input type="hidden" name="subject"    value="{{ selected_subject }}">
+                            <input type="hidden" name="date"       value="{{ selected_date }}">
+                            <input type="hidden" name="filter"     value="{{ filter_type }}">
+                            <button type="submit" class="btn-remove">✗ Remove</button>
+                        </form>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state">
+            <div style="font-size:48px">📭</div>
+            <p>No records found for this filter.</p>
+        </div>
+        {% endif %}
+    </div>
+
+    {% endif %}
+
+</div>
+</body>
+</html>
