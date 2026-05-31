@@ -1,0 +1,6 @@
+__pycache__/
+*.pkl
+dataset/
+.DS_Store
+*.xlsx
+encodings.pkl
